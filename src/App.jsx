@@ -1,4 +1,13 @@
 import { useState } from 'react'
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { useFuelRecords } from './hooks/useFuelRecords'
 import { useVehicles } from './hooks/useVehicles'
 import './App.css'
@@ -39,6 +48,20 @@ function formatMonth(value) {
     month: 'long',
     year: 'numeric',
   }).format(new Date(`${value}-01T00:00:00`))
+}
+
+function getRecentMonths(count) {
+  const today = new Date()
+
+  return Array.from({ length: count }, (_, index) => {
+    const monthDate = new Date(today.getFullYear(), today.getMonth() - (count - 1 - index), 1)
+    const month = String(monthDate.getMonth() + 1).padStart(2, '0')
+
+    return {
+      key: `${monthDate.getFullYear()}-${month}`,
+      label: new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(monthDate),
+    }
+  })
 }
 
 function getBackupFileName() {
@@ -129,6 +152,22 @@ function App() {
     averageAmount: currentMonthRecords.length ? currentMonthRecords.reduce((total, record) => total + record.amount, 0) / currentMonthRecords.length : 0,
     averageEfficiency: monthlyEfficiencies.length ? monthlyEfficiencies.reduce((total, efficiency) => total + efficiency, 0) / monthlyEfficiencies.length : 0,
   }
+  const monthlyChartData = getRecentMonths(6).map((month) => ({
+    ...month,
+    amount: activeRecords
+      .filter((record) => record.date.startsWith(month.key))
+      .reduce((total, record) => total + record.amount, 0),
+  }))
+  const spendingPoints = monthlyChartData.filter((month) => month.amount > 0).length
+  const efficiencyChartData = chronologicalRecords
+    .map((record) => {
+      const calculation = calculations.get(record.id)
+
+      return calculation
+        ? { label: formatDate(record.date), efficiency: calculation.efficiency }
+        : null
+    })
+    .filter(Boolean)
 
   function handleVehicleChange(event) {
     const { name, value } = event.target
@@ -290,6 +329,42 @@ function App() {
           <section className="summary panel" aria-labelledby="summary-title">
             <div className="section-heading summary-heading"><div><h2 id="summary-title">Ringkasan {formatMonth(currentMonth)}</h2><p>Rekap khusus {activeVehicle.name}.</p></div></div>
             {currentMonthRecords.length === 0 ? <div className="empty-state">Belum ada pengisian bensin bulan ini.</div> : <div className="summary-grid"><div className="summary-item"><span>Total pengeluaran</span><strong>{formatCurrency(monthlySummary.totalAmount)}</strong></div><div className="summary-item"><span>Total liter</span><strong>{formatNumber(monthlySummary.totalLiters)} L</strong></div><div className="summary-item"><span>Rata-rata nominal / isi</span><strong>{formatCurrency(monthlySummary.averageAmount)}</strong></div><div className="summary-item"><span>Rata-rata efisiensi</span><strong>{monthlyEfficiencies.length ? `${formatNumber(monthlySummary.averageEfficiency)} km/L` : '-'}</strong></div></div>}
+          </section>
+
+          <section className="charts-section" aria-labelledby="charts-title">
+            <div className="section-heading chart-heading">
+              <div><h2 id="charts-title">Grafik Tren</h2><p>Perubahan pengeluaran dan efisiensi kendaraan ini.</p></div>
+            </div>
+            <div className="charts-grid">
+              <article className="chart-card">
+                <h3>Pengeluaran per bulan</h3>
+                {spendingPoints < 2 ? <div className="chart-empty">Data belum cukup untuk menampilkan grafik</div> : (
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={monthlyChartData} margin={{ top: 8, right: 12, bottom: 8, left: 12 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `${Math.round(value / 1000)}k`} />
+                      <Tooltip formatter={(value) => formatCurrency(value)} />
+                      <Line type="monotone" dataKey="amount" name="Pengeluaran" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </article>
+              <article className="chart-card">
+                <h3>Efisiensi per pengisian</h3>
+                {efficiencyChartData.length < 2 ? <div className="chart-empty">Data belum cukup untuk menampilkan grafik</div> : (
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={efficiencyChartData} margin={{ top: 8, right: 12, bottom: 8, left: 12 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `${value} km/L`} />
+                      <Tooltip formatter={(value) => `${formatNumber(value)} km/L`} />
+                      <Line type="monotone" dataKey="efficiency" name="Efisiensi" stroke="#16a34a" strokeWidth={3} dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </article>
+            </div>
           </section>
 
           <section className="history" aria-labelledby="history-title">

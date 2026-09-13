@@ -373,6 +373,58 @@ h2 {
   font-size: 1.25rem;
 }
 
+.charts-section {
+  margin-bottom: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+  overflow: hidden;
+}
+
+.chart-heading {
+  padding-bottom: 20px;
+}
+
+.chart-heading h2 {
+  margin-bottom: 6px;
+}
+
+.chart-heading p {
+  margin-bottom: 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border-top: 1px solid #f3f4f6;
+  background: #f3f4f6;
+}
+
+.chart-card {
+  min-width: 0;
+  padding: 20px 24px 24px;
+  background: #ffffff;
+}
+
+.chart-card h3 {
+  margin: 0 0 10px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.chart-empty {
+  display: grid;
+  height: 240px;
+  place-items: center;
+  color: #6b7280;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 .fuel-form {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -547,6 +599,10 @@ tbody tr:last-child td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
   .summary-item:nth-child(2) {
     border-right: 0;
   }
@@ -578,6 +634,10 @@ tbody tr:last-child td {
   }
 
   .summary-item {
+    padding-inline: 18px;
+  }
+
+  .chart-card {
     padding-inline: 18px;
   }
 
