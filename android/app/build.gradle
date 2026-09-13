@@ -22,6 +22,19 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    def localKeystore = file('development-release.keystore')
+    if (localKeystore.exists()) {
+        signingConfigs {
+            developmentRelease {
+                storeFile localKeystore
+                storePassword project.findProperty('RELEASE_STORE_PASSWORD') ?: System.getenv('RELEASE_STORE_PASSWORD')
+                keyAlias project.findProperty('RELEASE_KEY_ALIAS') ?: System.getenv('RELEASE_KEY_ALIAS')
+                keyPassword project.findProperty('RELEASE_KEY_PASSWORD') ?: System.getenv('RELEASE_KEY_PASSWORD')
+            }
+        }
+        buildTypes.release.signingConfig signingConfigs.developmentRelease
+    }
 }
 
 repositories {

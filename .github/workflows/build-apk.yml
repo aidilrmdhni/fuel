@@ -61,3 +61,14 @@ jobs:
         with:
           name: fuel-tracker-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Build release APK without secret signing
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Upload unsigned release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuel-tracker-release-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: warn
