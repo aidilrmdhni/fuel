@@ -8,7 +8,22 @@
 }
 
 .page-header {
+  position: relative;
   margin-bottom: 32px;
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-height: 34px;
+  color: #1e3a8a;
+  background: #dbeafe;
+  font-size: 0.8rem;
+}
+
+.theme-toggle:hover {
+  background: #bfdbfe;
 }
 
 .vehicles-section {
@@ -334,6 +349,68 @@
 .service-due {
   color: #b91c1c !important;
   font-weight: 700;
+}
+
+.app.theme-dark {
+  color: #e5e7eb;
+  background: #0f172a;
+}
+
+.app.theme-dark h1,
+.app.theme-dark h2,
+.app.theme-dark h3,
+.app.theme-dark .summary-item strong {
+  color: #f8fafc;
+}
+
+.app.theme-dark .subtitle,
+.app.theme-dark .summary-heading p,
+.app.theme-dark .chart-heading p,
+.app.theme-dark .reminder-card p,
+.app.theme-dark .section-heading span {
+  color: #94a3b8;
+}
+
+.app.theme-dark .panel,
+.app.theme-dark .history,
+.app.theme-dark .charts-section,
+.app.theme-dark .reminder-card {
+  border-color: #334155;
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgb(2 6 23 / 24%);
+}
+
+.app.theme-dark .summary-grid,
+.app.theme-dark .charts-grid {
+  border-color: #334155;
+  background: #334155;
+}
+
+.app.theme-dark .summary-item,
+.app.theme-dark .chart-card {
+  border-color: #334155;
+  background: #1e293b;
+}
+
+.app.theme-dark .summary-item span,
+.app.theme-dark th,
+.app.theme-dark .reminder-heading strong {
+  color: #94a3b8;
+}
+
+.app.theme-dark input,
+.app.theme-dark select {
+  border-color: #475569;
+  color: #f8fafc;
+  background: #0f172a;
+}
+
+.app.theme-dark td {
+  border-color: #334155;
+}
+
+.app.theme-dark .empty-state {
+  color: #94a3b8;
 }
 
 .active-vehicle-label {
@@ -720,5 +797,10 @@ tbody tr:last-child td {
 
   .data-actions {
     flex-direction: column;
+  }
+
+  .theme-toggle {
+    position: static;
+    margin-top: 18px;
   }
 }

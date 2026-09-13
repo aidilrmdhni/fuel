@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   CartesianGrid,
   Line,
@@ -124,6 +124,7 @@ function App() {
   const [form, setForm] = useState({ date: getToday(), amount: '', liters: '', odometer: '' })
   const [error, setError] = useState('')
   const [dataMessage, setDataMessage] = useState({ type: '', text: '' })
+  const [theme, setTheme] = useState(() => window.localStorage.getItem('themePreference') || 'dark')
   const selectedVehicleId = vehicles.some((vehicle) => vehicle.id === activeVehicleId)
     ? activeVehicleId
     : vehicles[0]?.id
@@ -173,6 +174,10 @@ function App() {
     : budgetPercentage >= 75
       ? 'warning'
       : 'good'
+
+  useEffect(() => {
+    window.localStorage.setItem('themePreference', theme)
+  }, [theme])
   const monthlyChartData = getRecentMonths(6).map((month) => ({
     ...month,
     amount: activeRecords
@@ -305,11 +310,14 @@ function App() {
   }
 
   return (
-    <main className="app">
+    <main className={`app theme-${theme}`}>
       <header className="page-header">
         <p className="eyebrow">Dashboard kendaraan</p>
         <h1>Motor Fuel Tracker</h1>
         <p className="subtitle">Satu tempat untuk memantau biaya dan efisiensi semua kendaraan.</p>
+        <button className="theme-toggle" type="button" onClick={() => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+        </button>
       </header>
 
       <section className="vehicles-section" aria-labelledby="vehicles-title">

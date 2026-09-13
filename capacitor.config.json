@@ -1,5 +1,13 @@
 {
   "appId": "com.aidilrmdhni.fueltracker",
   "appName": "Fuel Tracker",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#0f172a",
+      "androidScaleType": "CENTER",
+      "showSpinner": false
+    }
+  }
 }
