@@ -18,6 +18,8 @@ const VEHICLE_TYPES = {
   other: 'Lainnya',
 }
 
+const FUEL_TYPES = ['Pertalite', 'Pertamax', 'Pertamax Turbo', 'Solar', 'Dexlite', 'Lainnya']
+
 function getToday() {
   const today = new Date()
   const offset = today.getTimezoneOffset() * 60000
@@ -144,7 +146,14 @@ function App() {
     intervalServisKm: '',
   })
   const [editingVehicleId, setEditingVehicleId] = useState(null)
-  const [form, setForm] = useState({ date: getToday(), amount: '', liters: '', odometer: '' })
+  const [form, setForm] = useState({
+    date: getToday(),
+    amount: '',
+    liters: '',
+    odometer: '',
+    jenisBBM: '',
+    namaSPBU: '',
+  })
   const [error, setError] = useState('')
   const [dataMessage, setDataMessage] = useState({ type: '', text: '' })
   const [theme, setTheme] = useState(() => window.localStorage.getItem('themePreference') || 'dark')
@@ -182,6 +191,19 @@ function App() {
     averageAmount: currentMonthRecords.length ? currentMonthRecords.reduce((total, record) => total + record.amount, 0) / currentMonthRecords.length : 0,
     averageEfficiency: monthlyEfficiencies.length ? monthlyEfficiencies.reduce((total, efficiency) => total + efficiency, 0) / monthlyEfficiencies.length : 0,
   }
+  const fuelTypeInsights = Object.entries(
+    activeRecords.reduce((groups, record) => {
+      if (!record.jenisBBM) return groups
+      const calculation = calculations.get(record.id)
+      if (!calculation) return groups
+      groups[record.jenisBBM] = groups[record.jenisBBM] || []
+      groups[record.jenisBBM].push(calculation.efficiency)
+      return groups
+    }, {}),
+  ).map(([type, efficiencies]) => ({
+    type,
+    averageEfficiency: efficiencies.reduce((total, efficiency) => total + efficiency, 0) / efficiencies.length,
+  })).sort((first, second) => second.averageEfficiency - first.averageEfficiency)
   const comparisonStats = vehicles
     .map((vehicle) => {
       const vehicleRecords = records
@@ -391,8 +413,16 @@ function App() {
       setError('Isi semua field dengan nilai angka yang lebih besar dari nol.')
       return
     }
-    addRecord({ vehicleId: activeVehicleId, date: form.date, amount: numericValues[0], liters: numericValues[1], odometer: numericValues[2] })
-    setForm({ date: getToday(), amount: '', liters: '', odometer: '' })
+    addRecord({
+      vehicleId: activeVehicleId,
+      date: form.date,
+      amount: numericValues[0],
+      liters: numericValues[1],
+      odometer: numericValues[2],
+      jenisBBM: form.jenisBBM || null,
+      namaSPBU: form.namaSPBU.trim() || null,
+    })
+    setForm({ date: getToday(), amount: '', liters: '', odometer: '', jenisBBM: '', namaSPBU: '' })
     setError('')
   }
 
@@ -470,6 +500,8 @@ function App() {
               <label>Nominal bensin (rupiah)<input type="number" name="amount" min="0" step="1" value={form.amount} onChange={handleChange} placeholder="50000" /></label>
               <label>Liter bensin<input type="number" name="liters" min="0" step="any" value={form.liters} onChange={handleChange} placeholder="4.2" /></label>
               <label>Odometer saat ini (km)<input type="number" name="odometer" min="0" step="any" value={form.odometer} onChange={handleChange} placeholder="12500" /></label>
+              <label>Jenis BBM (opsional)<select name="jenisBBM" value={form.jenisBBM} onChange={handleChange}><option value="">Pilih jenis BBM</option>{FUEL_TYPES.map((fuelType) => <option key={fuelType} value={fuelType}>{fuelType}</option>)}</select></label>
+              <label>Nama SPBU (opsional)<input type="text" name="namaSPBU" value={form.namaSPBU} onChange={handleChange} placeholder="Pertamina Jl. Sudirman" /></label>
               <button type="submit">Simpan catatan</button>
             </form>
             {error && <p className="form-error" role="alert">{error}</p>}
@@ -479,6 +511,11 @@ function App() {
             <div className="section-heading summary-heading"><div><h2 id="summary-title">Ringkasan {formatMonth(currentMonth)}</h2><p>Rekap khusus {activeVehicle.name}.</p></div></div>
             {currentMonthRecords.length === 0 ? <div className="empty-state">Belum ada pengisian bensin bulan ini.</div> : <div className="summary-grid"><div className="summary-item"><span>Total pengeluaran</span><strong>{formatCurrency(monthlySummary.totalAmount)}</strong></div><div className="summary-item"><span>Total liter</span><strong>{formatNumber(monthlySummary.totalLiters)} L</strong></div><div className="summary-item"><span>Rata-rata nominal / isi</span><strong>{formatCurrency(monthlySummary.averageAmount)}</strong></div><div className="summary-item"><span>Rata-rata efisiensi</span><strong>{monthlyEfficiencies.length ? `${formatNumber(monthlySummary.averageEfficiency)} km/L` : '-'}</strong></div></div>}
           </section>
+
+          {fuelTypeInsights.length > 1 && <section className="fuel-insights panel" aria-labelledby="fuel-insights-title">
+            <div className="section-heading"><div><h2 id="fuel-insights-title">Insight Jenis BBM</h2><p>Rata-rata efisiensi berdasarkan jenis BBM untuk {activeVehicle.name}.</p></div></div>
+            <div className="fuel-insight-list">{fuelTypeInsights.map((insight, index) => <div className="fuel-insight-item" key={insight.type}><span>{index === 0 && <strong className="best-fuel-badge">Paling efisien</strong>}{insight.type}</span><strong>{formatNumber(insight.averageEfficiency)} km/L</strong></div>)}</div>
+          </section>}
 
           {(monthlyBudget > 0 || serviceInterval > 0) && <section className="reminders-grid" aria-label="Pengingat dan target">
             {monthlyBudget > 0 && <article className="reminder-card budget-card">
@@ -531,7 +568,7 @@ function App() {
 
           <section className="history" aria-labelledby="history-title">
             <div className="section-heading"><h2 id="history-title">Riwayat pengisian</h2><span>{activeRecords.length} catatan</span></div>
-            {displayedRecords.length === 0 ? <div className="empty-state">Belum ada catatan pengisian untuk kendaraan ini.</div> : <div className="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nominal</th><th>Liter</th><th>Odometer</th><th>Jarak</th><th>Efisiensi</th><th>Biaya/km</th><th><span className="visually-hidden">Aksi</span></th></tr></thead><tbody>{displayedRecords.map((record) => { const calculation = calculations.get(record.id); return <tr key={record.id}><td>{formatDate(record.date)}</td><td>{formatCurrency(record.amount)}</td><td>{formatNumber(record.liters)} L</td><td>{formatNumber(record.odometer)} km</td><td>{calculation ? `${formatNumber(calculation.distance)} km` : '-'}</td><td>{calculation ? `${formatNumber(calculation.efficiency)} km/L` : '-'}</td><td>{calculation ? formatCurrency(calculation.costPerKm, 2) : '-'}</td><td><button className="delete-button" type="button" onClick={() => handleRemove(record)}>Hapus</button></td></tr> })}</tbody></table></div>}
+            {displayedRecords.length === 0 ? <div className="empty-state">Belum ada catatan pengisian untuk kendaraan ini.</div> : <div className="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nominal</th><th>Liter</th><th>Odometer</th><th>Jenis BBM / SPBU</th><th>Jarak</th><th>Efisiensi</th><th>Biaya/km</th><th><span className="visually-hidden">Aksi</span></th></tr></thead><tbody>{displayedRecords.map((record) => { const calculation = calculations.get(record.id); return <tr key={record.id}><td>{formatDate(record.date)}</td><td>{formatCurrency(record.amount)}</td><td>{formatNumber(record.liters)} L</td><td>{formatNumber(record.odometer)} km</td><td><span className="fuel-info">{record.jenisBBM || '-'}{record.namaSPBU && <small>{record.namaSPBU}</small>}</span></td><td>{calculation ? `${formatNumber(calculation.distance)} km` : '-'}</td><td>{calculation ? `${formatNumber(calculation.efficiency)} km/L` : '-'}</td><td>{calculation ? formatCurrency(calculation.costPerKm, 2) : '-'}</td><td><button className="delete-button" type="button" onClick={() => handleRemove(record)}>Hapus</button></td></tr> })}</tbody></table></div>}
           </section>
         </>
       )}
