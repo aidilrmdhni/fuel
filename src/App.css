@@ -26,6 +26,50 @@
   background: #bfdbfe;
 }
 
+.backup-reminder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  border: 1px solid #fbbf24;
+  border-radius: 10px;
+  color: #78350f;
+  background: #fffbeb;
+}
+
+.backup-reminder strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.backup-reminder p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.backup-reminder-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.backup-reminder-actions button {
+  min-height: 34px;
+  padding-inline: 12px;
+  font-size: 0.8rem;
+}
+
+.backup-reminder-actions .reminder-dismiss {
+  color: #78350f;
+  background: transparent;
+}
+
+.backup-reminder-actions .reminder-dismiss:hover {
+  background: #fef3c7;
+}
+
 .vehicles-section {
   margin-bottom: 32px;
   padding: 24px;
@@ -844,5 +888,14 @@ tbody tr:last-child td {
   .theme-toggle {
     position: static;
     margin-top: 18px;
+  }
+
+  .backup-reminder {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .backup-reminder-actions {
+    flex-wrap: wrap;
   }
 }

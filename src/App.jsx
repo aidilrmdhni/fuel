@@ -84,6 +84,15 @@ function isValidBackup(data) {
   return validVehicles && validRecords
 }
 
+function shouldShowBackupReminder(recordCount) {
+  const lastBackupAt = Number(window.localStorage.getItem('lastBackupAt'))
+  const dismissedUntil = Number(window.localStorage.getItem('backupReminderDismissedUntil'))
+  const fourteenDays = 14 * 24 * 60 * 60 * 1000
+  const hasExpiredBackup = !lastBackupAt || Date.now() - lastBackupAt > fourteenDays
+
+  return recordCount >= 5 && hasExpiredBackup && Date.now() >= dismissedUntil
+}
+
 function VehicleIcon({ type }) {
   if (type === 'motorcycle') {
     return <svg viewBox="0 0 64 40" aria-hidden="true"><circle cx="14" cy="29" r="8" /><circle cx="50" cy="29" r="8" /><path d="M14 29 24 13h11l6 16M29 13l-5-7h8l5 7M41 29h9M37 13h8l5 8" /></svg>
@@ -125,6 +134,7 @@ function App() {
   const [error, setError] = useState('')
   const [dataMessage, setDataMessage] = useState({ type: '', text: '' })
   const [theme, setTheme] = useState(() => window.localStorage.getItem('themePreference') || 'dark')
+  const [showBackupReminder, setShowBackupReminder] = useState(() => shouldShowBackupReminder(records.length))
   const selectedVehicleId = vehicles.some((vehicle) => vehicle.id === activeVehicleId)
     ? activeVehicleId
     : vehicles[0]?.id
@@ -278,7 +288,17 @@ function App() {
     link.download = getBackupFileName()
     link.click()
     URL.revokeObjectURL(downloadUrl)
+    window.localStorage.setItem('lastBackupAt', String(Date.now()))
+    window.localStorage.removeItem('backupReminderDismissedUntil')
+    setShowBackupReminder(false)
     setDataMessage({ type: 'success', text: `Data berhasil diekspor sebagai ${link.download}.` })
+  }
+
+  function dismissBackupReminder() {
+    const tomorrow = Date.now() + 24 * 60 * 60 * 1000
+
+    window.localStorage.setItem('backupReminderDismissedUntil', String(tomorrow))
+    setShowBackupReminder(false)
   }
 
   function handleImport(event) {
@@ -347,6 +367,17 @@ function App() {
           {theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
         </button>
       </header>
+
+      {showBackupReminder && <aside className="backup-reminder" role="status">
+        <div>
+          <strong>Waktunya mencadangkan data</strong>
+          <p>Data kendaraan dan riwayat bensin sudah cukup banyak. Simpan backup JSON agar tetap aman.</p>
+        </div>
+        <div className="backup-reminder-actions">
+          <button type="button" onClick={handleExport}>Export sekarang</button>
+          <button className="reminder-dismiss" type="button" onClick={dismissBackupReminder}>Ingatkan besok</button>
+        </div>
+      </aside>}
 
       <section className="vehicles-section" aria-labelledby="vehicles-title">
         <div className="section-heading page-section-heading">
