@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { LocalNotifications } from '@capacitor/local-notifications'
 import {
   CartesianGrid,
   Line,
@@ -84,6 +85,12 @@ function escapeCsvValue(value) {
     : stringValue
 }
 
+function getNotificationIds(vehicleId) {
+  const hash = String(vehicleId).split('').reduce((total, character) => total + character.charCodeAt(0), 0)
+
+  return { budget: 2000 + hash, service: 4000 + hash }
+}
+
 function isValidBackup(data) {
   const validTypes = new Set(['motorcycle', 'car', 'other'])
   const validVehicles = Array.isArray(data?.vehicles) && data.vehicles.every(
@@ -158,6 +165,7 @@ function App() {
   const [dataMessage, setDataMessage] = useState({ type: '', text: '' })
   const [theme, setTheme] = useState(() => window.localStorage.getItem('themePreference') || 'dark')
   const [showBackupReminder, setShowBackupReminder] = useState(() => shouldShowBackupReminder(records.length))
+  const [notificationsReady, setNotificationsReady] = useState(false)
   const selectedVehicleId = vehicles.some((vehicle) => vehicle.id === activeVehicleId)
     ? activeVehicleId
     : vehicles[0]?.id
@@ -252,6 +260,58 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem('themePreference', theme)
   }, [theme])
+
+  useEffect(() => {
+    let isMounted = true
+
+    LocalNotifications.requestPermissions()
+      .then(() => {
+        if (isMounted) setNotificationsReady(true)
+      })
+      .catch(() => {})
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!notificationsReady || !activeVehicle) return
+
+    const notificationIds = getNotificationIds(activeVehicle.id)
+    const notifications = []
+    const notificationTime = new Date()
+    notificationTime.setSeconds(notificationTime.getSeconds() + 1)
+
+    if (monthlyBudget > 0 && budgetPercentage > 90) {
+      notifications.push({
+        id: notificationIds.budget,
+        title: 'Budget bensin hampir habis',
+        body: `${activeVehicle.name} sudah memakai ${formatNumber(budgetPercentage)}% budget bulan ini.`,
+        schedule: { at: notificationTime },
+      })
+    }
+    if (serviceInterval > 0 && latestRecord && serviceRemaining <= 0) {
+      notifications.push({
+        id: notificationIds.service,
+        title: 'Saatnya servis kendaraan',
+        body: `${activeVehicle.name} sudah melewati interval servis ${formatNumber(serviceInterval)} km.`,
+        schedule: { at: notificationTime },
+      })
+    }
+
+    LocalNotifications.cancel({
+      notifications: [
+        { id: notificationIds.budget },
+        { id: notificationIds.service },
+      ],
+    })
+      .then(() => {
+        if (notifications.length > 0) return LocalNotifications.schedule({ notifications })
+        return null
+      })
+      .catch(() => {})
+  }, [activeVehicle, budgetPercentage, latestRecord, monthlyBudget, notificationsReady, serviceInterval, serviceRemaining])
   const monthlyChartData = getRecentMonths(6).map((month) => ({
     ...month,
     amount: activeRecords
