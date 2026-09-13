@@ -114,7 +114,12 @@ function App() {
     mergeRecords,
   } = useFuelRecords()
   const [activeVehicleId, setActiveVehicleId] = useState(vehicles[0]?.id ?? null)
-  const [vehicleForm, setVehicleForm] = useState({ name: '', type: 'motorcycle' })
+  const [vehicleForm, setVehicleForm] = useState({
+    name: '',
+    type: 'motorcycle',
+    budgetBulanan: '',
+    intervalServisKm: '',
+  })
   const [editingVehicleId, setEditingVehicleId] = useState(null)
   const [form, setForm] = useState({ date: getToday(), amount: '', liters: '', odometer: '' })
   const [error, setError] = useState('')
@@ -152,6 +157,22 @@ function App() {
     averageAmount: currentMonthRecords.length ? currentMonthRecords.reduce((total, record) => total + record.amount, 0) / currentMonthRecords.length : 0,
     averageEfficiency: monthlyEfficiencies.length ? monthlyEfficiencies.reduce((total, efficiency) => total + efficiency, 0) / monthlyEfficiencies.length : 0,
   }
+  const monthlyBudget = Number(activeVehicle?.budgetBulanan) || 0
+  const serviceInterval = Number(activeVehicle?.intervalServisKm) || 0
+  const latestRecord = chronologicalRecords[chronologicalRecords.length - 1]
+  const firstRecord = chronologicalRecords[0]
+  const distanceSinceService = latestRecord && firstRecord
+    ? Math.max(0, latestRecord.odometer - firstRecord.odometer)
+    : 0
+  const serviceRemaining = serviceInterval - distanceSinceService
+  const budgetPercentage = monthlyBudget
+    ? Math.min(100, (monthlySummary.totalAmount / monthlyBudget) * 100)
+    : 0
+  const budgetStatus = budgetPercentage >= 100
+    ? 'over'
+    : budgetPercentage >= 75
+      ? 'warning'
+      : 'good'
   const monthlyChartData = getRecentMonths(6).map((month) => ({
     ...month,
     amount: activeRecords
@@ -179,18 +200,33 @@ function App() {
     const name = vehicleForm.name.trim()
     if (!name) return
     if (editingVehicleId) {
-      updateVehicle(editingVehicleId, { name, type: vehicleForm.type })
+      updateVehicle(editingVehicleId, {
+        name,
+        type: vehicleForm.type,
+        budgetBulanan: vehicleForm.budgetBulanan ? Number(vehicleForm.budgetBulanan) : null,
+        intervalServisKm: vehicleForm.intervalServisKm ? Number(vehicleForm.intervalServisKm) : null,
+      })
     } else {
-      const newVehicle = addVehicle({ name, type: vehicleForm.type })
+      const newVehicle = addVehicle({
+        name,
+        type: vehicleForm.type,
+        budgetBulanan: vehicleForm.budgetBulanan ? Number(vehicleForm.budgetBulanan) : null,
+        intervalServisKm: vehicleForm.intervalServisKm ? Number(vehicleForm.intervalServisKm) : null,
+      })
       setActiveVehicleId(newVehicle.id)
     }
-    setVehicleForm({ name: '', type: 'motorcycle' })
+    setVehicleForm({ name: '', type: 'motorcycle', budgetBulanan: '', intervalServisKm: '' })
     setEditingVehicleId(null)
   }
 
   function startEditingVehicle(vehicle) {
     setEditingVehicleId(vehicle.id)
-    setVehicleForm({ name: vehicle.name, type: vehicle.type })
+    setVehicleForm({
+      name: vehicle.name,
+      type: vehicle.type,
+      budgetBulanan: vehicle.budgetBulanan ?? '',
+      intervalServisKm: vehicle.intervalServisKm ?? '',
+    })
   }
 
   function handleRemoveVehicle(vehicle) {
@@ -298,7 +334,9 @@ function App() {
             <h3>{editingVehicleId ? 'Edit kendaraan' : 'Tambah kendaraan'}</h3>
             <label>Nama kendaraan<input type="text" name="name" value={vehicleForm.name} onChange={handleVehicleChange} placeholder="Motor Vario" required /></label>
             <label>Jenis kendaraan<select name="type" value={vehicleForm.type} onChange={handleVehicleChange}><option value="motorcycle">Motor</option><option value="car">Mobil</option><option value="other">Lainnya</option></select></label>
-            <div className="vehicle-form-actions"><button type="submit">{editingVehicleId ? 'Simpan perubahan' : 'Tambah kendaraan'}</button>{editingVehicleId && <button className="secondary-button" type="button" onClick={() => { setEditingVehicleId(null); setVehicleForm({ name: '', type: 'motorcycle' }) }}>Batal</button>}</div>
+            <label>Budget bulanan (opsional)<input type="number" name="budgetBulanan" min="0" step="1" value={vehicleForm.budgetBulanan} onChange={handleVehicleChange} placeholder="1000000" /></label>
+            <label>Interval servis (km, opsional)<input type="number" name="intervalServisKm" min="0" step="1" value={vehicleForm.intervalServisKm} onChange={handleVehicleChange} placeholder="2000" /></label>
+            <div className="vehicle-form-actions"><button type="submit">{editingVehicleId ? 'Simpan perubahan' : 'Tambah kendaraan'}</button>{editingVehicleId && <button className="secondary-button" type="button" onClick={() => { setEditingVehicleId(null); setVehicleForm({ name: '', type: 'motorcycle', budgetBulanan: '', intervalServisKm: '' }) }}>Batal</button>}</div>
           </form>
         </div>
         <div className="data-actions">
@@ -330,6 +368,19 @@ function App() {
             <div className="section-heading summary-heading"><div><h2 id="summary-title">Ringkasan {formatMonth(currentMonth)}</h2><p>Rekap khusus {activeVehicle.name}.</p></div></div>
             {currentMonthRecords.length === 0 ? <div className="empty-state">Belum ada pengisian bensin bulan ini.</div> : <div className="summary-grid"><div className="summary-item"><span>Total pengeluaran</span><strong>{formatCurrency(monthlySummary.totalAmount)}</strong></div><div className="summary-item"><span>Total liter</span><strong>{formatNumber(monthlySummary.totalLiters)} L</strong></div><div className="summary-item"><span>Rata-rata nominal / isi</span><strong>{formatCurrency(monthlySummary.averageAmount)}</strong></div><div className="summary-item"><span>Rata-rata efisiensi</span><strong>{monthlyEfficiencies.length ? `${formatNumber(monthlySummary.averageEfficiency)} km/L` : '-'}</strong></div></div>}
           </section>
+
+          {(monthlyBudget > 0 || serviceInterval > 0) && <section className="reminders-grid" aria-label="Pengingat dan target">
+            {monthlyBudget > 0 && <article className="reminder-card budget-card">
+              <div className="reminder-heading"><h2>Budget Bulan Ini</h2><strong>{formatCurrency(monthlySummary.totalAmount)} / {formatCurrency(monthlyBudget)}</strong></div>
+              <div className="progress-track" aria-label={`${formatNumber(budgetPercentage)} persen budget terpakai`}><span className={`progress-value ${budgetStatus}`} style={{ width: `${budgetPercentage}%` }} /></div>
+              <p>{formatNumber(budgetPercentage)}% terpakai</p>
+            </article>}
+            {serviceInterval > 0 && latestRecord && <article className="reminder-card service-card">
+              <div className="reminder-heading"><h2>Pengingat Servis</h2><strong>Setiap {formatNumber(serviceInterval)} km</strong></div>
+              <p className={serviceRemaining <= 0 ? 'service-due' : ''}>{serviceRemaining <= 0 ? 'Saatnya servis!' : `${formatNumber(serviceRemaining)} km lagi menuju servis berikutnya`}</p>
+              <small>Patokan awal: odometer saat catatan pertama ({formatNumber(firstRecord.odometer)} km).</small>
+            </article>}
+          </section>}
 
           <section className="charts-section" aria-labelledby="charts-title">
             <div className="section-heading chart-heading">

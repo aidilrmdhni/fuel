@@ -267,6 +267,75 @@
   color: #fca5a5;
 }
 
+.reminders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.reminder-card {
+  padding: 20px 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+}
+
+.reminder-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reminder-heading h2 {
+  margin-bottom: 0;
+}
+
+.reminder-heading strong {
+  color: #4b5563;
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+.progress-track {
+  height: 10px;
+  margin: 20px 0 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.progress-value {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 200ms ease;
+}
+
+.progress-value.good { background: #16a34a; }
+.progress-value.warning { background: #eab308; }
+.progress-value.over { background: #dc2626; }
+
+.reminder-card p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.reminder-card small {
+  display: block;
+  margin-top: 12px;
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.service-due {
+  color: #b91c1c !important;
+  font-weight: 700;
+}
+
 .active-vehicle-label {
   margin: -12px 0 18px;
   color: #6b7280;
@@ -603,6 +672,10 @@ tbody tr:last-child td {
     grid-template-columns: 1fr;
   }
 
+  .reminders-grid {
+    grid-template-columns: 1fr;
+  }
+
   .summary-item:nth-child(2) {
     border-right: 0;
   }
@@ -638,6 +711,10 @@ tbody tr:last-child td {
   }
 
   .chart-card {
+    padding-inline: 18px;
+  }
+
+  .reminder-card {
     padding-inline: 18px;
   }
 
