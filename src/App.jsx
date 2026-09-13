@@ -29,6 +29,13 @@ function formatDate(value) {
   }).format(new Date(`${value}T00:00:00`))
 }
 
+function formatMonth(value) {
+  return new Intl.DateTimeFormat('id-ID', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${value}-01T00:00:00`))
+}
+
 function App() {
   const { records, addRecord, removeRecord } = useFuelRecords()
   const [form, setForm] = useState({
@@ -71,6 +78,25 @@ function App() {
       secondRecord.date.localeCompare(firstRecord.date) ||
       secondRecord.id - firstRecord.id,
   )
+  const currentMonth = getToday().slice(0, 7)
+  const currentMonthRecords = records.filter((record) =>
+    record.date.startsWith(currentMonth),
+  )
+  const monthlyEfficiencies = currentMonthRecords
+    .map((record) => calculations.get(record.id)?.efficiency)
+    .filter((efficiency) => Number.isFinite(efficiency))
+  const monthlySummary = {
+    totalAmount: currentMonthRecords.reduce((total, record) => total + record.amount, 0),
+    totalLiters: currentMonthRecords.reduce((total, record) => total + record.liters, 0),
+    averageAmount: currentMonthRecords.length
+      ? currentMonthRecords.reduce((total, record) => total + record.amount, 0) /
+        currentMonthRecords.length
+      : 0,
+    averageEfficiency: monthlyEfficiencies.length
+      ? monthlyEfficiencies.reduce((total, efficiency) => total + efficiency, 0) /
+        monthlyEfficiencies.length
+      : 0,
+  }
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -165,6 +191,41 @@ function App() {
           <button type="submit">Simpan catatan</button>
         </form>
         {error && <p className="form-error" role="alert">{error}</p>}
+      </section>
+
+      <section className="summary panel" aria-labelledby="summary-title">
+        <div className="section-heading summary-heading">
+          <div>
+            <h2 id="summary-title">Ringkasan {formatMonth(currentMonth)}</h2>
+            <p>Rekap pengisian berdasarkan tanggal transaksi.</p>
+          </div>
+        </div>
+        {currentMonthRecords.length === 0 ? (
+          <div className="empty-state">Belum ada pengisian bensin bulan ini.</div>
+        ) : (
+          <div className="summary-grid">
+            <div className="summary-item">
+              <span>Total pengeluaran</span>
+              <strong>{formatCurrency(monthlySummary.totalAmount)}</strong>
+            </div>
+            <div className="summary-item">
+              <span>Total liter</span>
+              <strong>{formatNumber(monthlySummary.totalLiters)} L</strong>
+            </div>
+            <div className="summary-item">
+              <span>Rata-rata nominal / isi</span>
+              <strong>{formatCurrency(monthlySummary.averageAmount)}</strong>
+            </div>
+            <div className="summary-item">
+              <span>Rata-rata efisiensi</span>
+              <strong>
+                {monthlyEfficiencies.length
+                  ? `${formatNumber(monthlySummary.averageEfficiency)} km/L`
+                  : '-'}
+              </strong>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="history" aria-labelledby="history-title">
