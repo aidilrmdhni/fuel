@@ -74,5 +74,28 @@ export function useVehicles() {
     )
   }
 
-  return { vehicles, addVehicle, updateVehicle, removeVehicle }
+  function replaceVehicles(nextVehicles) {
+    setVehicles(nextVehicles)
+  }
+
+  function mergeVehicles(nextVehicles) {
+    setVehicles((currentVehicles) => {
+      const currentIds = new Set(currentVehicles.map((vehicle) => vehicle.id))
+      const importedVehicles = nextVehicles.map((vehicle) => ({
+        ...vehicle,
+        id: currentIds.has(vehicle.id) ? createId() : vehicle.id,
+      }))
+
+      return [...currentVehicles, ...importedVehicles]
+    })
+  }
+
+  return {
+    vehicles,
+    addVehicle,
+    updateVehicle,
+    removeVehicle,
+    replaceVehicles,
+    mergeVehicles,
+  }
 }

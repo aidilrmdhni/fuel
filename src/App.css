@@ -220,6 +220,53 @@
   line-height: 1;
 }
 
+.data-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgb(255 255 255 / 12%);
+}
+
+.data-actions button,
+.import-button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 7px;
+  color: #dbeafe;
+  background: rgb(255 255 255 / 10%);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.data-actions button:hover,
+.import-button:hover {
+  background: rgb(255 255 255 / 18%);
+}
+
+.import-button {
+  display: inline-grid;
+  place-items: center;
+}
+
+.import-button input {
+  display: none;
+}
+
+.data-message {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+}
+
+.data-message.success {
+  color: #86efac;
+}
+
+.data-message.error {
+  color: #fca5a5;
+}
+
 .active-vehicle-label {
   margin: -12px 0 18px;
   color: #6b7280;
@@ -532,5 +579,9 @@ tbody tr:last-child td {
 
   .summary-item {
     padding-inline: 18px;
+  }
+
+  .data-actions {
+    flex-direction: column;
   }
 }

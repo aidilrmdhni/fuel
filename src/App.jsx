@@ -41,6 +41,26 @@ function formatMonth(value) {
   }).format(new Date(`${value}-01T00:00:00`))
 }
 
+function getBackupFileName() {
+  return `fuel-tracker-backup-${getToday()}.json`
+}
+
+function isValidBackup(data) {
+  const validTypes = new Set(['motorcycle', 'car', 'other'])
+  const validVehicles = Array.isArray(data?.vehicles) && data.vehicles.every(
+    (vehicle) => vehicle && vehicle.id !== undefined && typeof vehicle.name === 'string' &&
+      validTypes.has(vehicle.type),
+  )
+  const validRecords = Array.isArray(data?.fuelRecords) && data.fuelRecords.every(
+    (record) => record && record.id !== undefined && typeof record.vehicleId !== 'undefined' &&
+      typeof record.date === 'string' && Number.isFinite(record.amount) && record.amount > 0 &&
+      Number.isFinite(record.liters) && record.liters > 0 &&
+      Number.isFinite(record.odometer) && record.odometer > 0,
+  )
+
+  return validVehicles && validRecords
+}
+
 function VehicleIcon({ type }) {
   if (type === 'motorcycle') {
     return <svg viewBox="0 0 64 40" aria-hidden="true"><circle cx="14" cy="29" r="8" /><circle cx="50" cy="29" r="8" /><path d="M14 29 24 13h11l6 16M29 13l-5-7h8l5 7M41 29h9M37 13h8l5 8" /></svg>
@@ -54,13 +74,28 @@ function VehicleIcon({ type }) {
 }
 
 function App() {
-  const { vehicles, addVehicle, updateVehicle, removeVehicle } = useVehicles()
-  const { records, addRecord, removeRecord, removeRecordsForVehicle } = useFuelRecords()
+  const {
+    vehicles,
+    addVehicle,
+    updateVehicle,
+    removeVehicle,
+    replaceVehicles,
+    mergeVehicles,
+  } = useVehicles()
+  const {
+    records,
+    addRecord,
+    removeRecord,
+    removeRecordsForVehicle,
+    replaceRecords,
+    mergeRecords,
+  } = useFuelRecords()
   const [activeVehicleId, setActiveVehicleId] = useState(vehicles[0]?.id ?? null)
   const [vehicleForm, setVehicleForm] = useState({ name: '', type: 'motorcycle' })
   const [editingVehicleId, setEditingVehicleId] = useState(null)
   const [form, setForm] = useState({ date: getToday(), amount: '', liters: '', odometer: '' })
   const [error, setError] = useState('')
+  const [dataMessage, setDataMessage] = useState({ type: '', text: '' })
   const selectedVehicleId = vehicles.some((vehicle) => vehicle.id === activeVehicleId)
     ? activeVehicleId
     : vehicles[0]?.id
@@ -125,6 +160,51 @@ function App() {
     removeVehicle(vehicle.id)
   }
 
+  function handleExport() {
+    const backup = JSON.stringify({ vehicles, fuelRecords: records }, null, 2)
+    const blob = new Blob([backup], { type: 'application/json' })
+    const downloadUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = downloadUrl
+    link.download = getBackupFileName()
+    link.click()
+    URL.revokeObjectURL(downloadUrl)
+    setDataMessage({ type: 'success', text: `Data berhasil diekspor sebagai ${link.download}.` })
+  }
+
+  function handleImport(event) {
+    const [file] = event.target.files
+    event.target.value = ''
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const backup = JSON.parse(reader.result)
+        if (!isValidBackup(backup)) throw new Error('Struktur backup tidak valid.')
+
+        const mode = window.confirm(
+          'Pilih OK untuk mengganti semua data, atau Cancel untuk menggabungkan dengan data yang ada.',
+        )
+        if (mode) {
+          replaceVehicles(backup.vehicles)
+          replaceRecords(backup.fuelRecords)
+          setActiveVehicleId(backup.vehicles[0]?.id ?? null)
+          setDataMessage({ type: 'success', text: 'Semua data berhasil diganti dari backup.' })
+        } else {
+          mergeVehicles(backup.vehicles)
+          mergeRecords(backup.fuelRecords)
+          setDataMessage({ type: 'success', text: 'Data backup berhasil digabungkan.' })
+        }
+      } catch (importError) {
+        setDataMessage({ type: 'error', text: `Import gagal: ${importError.message}` })
+      }
+    }
+    reader.onerror = () => setDataMessage({ type: 'error', text: 'Import gagal: file tidak dapat dibaca.' })
+    reader.readAsText(file)
+  }
+
   function handleChange(event) {
     const { name, value } = event.target
     setForm((currentForm) => ({ ...currentForm, [name]: value }))
@@ -182,6 +262,14 @@ function App() {
             <div className="vehicle-form-actions"><button type="submit">{editingVehicleId ? 'Simpan perubahan' : 'Tambah kendaraan'}</button>{editingVehicleId && <button className="secondary-button" type="button" onClick={() => { setEditingVehicleId(null); setVehicleForm({ name: '', type: 'motorcycle' }) }}>Batal</button>}</div>
           </form>
         </div>
+        <div className="data-actions">
+          <button type="button" onClick={handleExport}>Export Data</button>
+          <label className="import-button">
+            Import Data
+            <input type="file" accept="application/json,.json" onChange={handleImport} />
+          </label>
+        </div>
+        {dataMessage.text && <p className={`data-message ${dataMessage.type}`} role="status">{dataMessage.text}</p>}
       </section>
 
       {!activeVehicle ? <div className="app-empty-state">Pilih atau tambahkan kendaraan di atas untuk melihat dashboard bensin.</div> : (

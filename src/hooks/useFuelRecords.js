@@ -43,5 +43,28 @@ export function useFuelRecords() {
     )
   }
 
-  return { records, addRecord, removeRecord, removeRecordsForVehicle }
+  function replaceRecords(nextRecords) {
+    setRecords(nextRecords)
+  }
+
+  function mergeRecords(nextRecords) {
+    setRecords((currentRecords) => {
+      const currentIds = new Set(currentRecords.map((record) => record.id))
+      const importedRecords = nextRecords.map((record) => ({
+        ...record,
+        id: currentIds.has(record.id) ? createRecordId() : record.id,
+      }))
+
+      return [...currentRecords, ...importedRecords]
+    })
+  }
+
+  return {
+    records,
+    addRecord,
+    removeRecord,
+    removeRecordsForVehicle,
+    replaceRecords,
+    mergeRecords,
+  }
 }
