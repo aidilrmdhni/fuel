@@ -351,6 +351,48 @@
   font-weight: 700;
 }
 
+.comparison-section {
+  margin-top: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+  overflow: hidden;
+}
+
+.comparison-heading {
+  padding-bottom: 20px;
+}
+
+.comparison-heading h2 {
+  margin-bottom: 0;
+}
+
+.comparison-table strong {
+  margin-right: 8px;
+}
+
+.economy-badge {
+  display: inline-block;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: #166534;
+  background: #dcfce7;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.app.theme-dark .comparison-section {
+  border-color: #334155;
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgb(2 6 23 / 24%);
+}
+
+.app.theme-dark .economy-badge {
+  color: #bbf7d0;
+  background: #14532d;
+}
+
 .app.theme-dark {
   color: #e5e7eb;
   background: #0f172a;

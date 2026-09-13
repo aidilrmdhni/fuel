@@ -158,6 +158,34 @@ function App() {
     averageAmount: currentMonthRecords.length ? currentMonthRecords.reduce((total, record) => total + record.amount, 0) / currentMonthRecords.length : 0,
     averageEfficiency: monthlyEfficiencies.length ? monthlyEfficiencies.reduce((total, efficiency) => total + efficiency, 0) / monthlyEfficiencies.length : 0,
   }
+  const comparisonStats = vehicles
+    .map((vehicle) => {
+      const vehicleRecords = records
+        .filter((record) => record.vehicleId === vehicle.id)
+        .sort((firstRecord, secondRecord) =>
+          firstRecord.date.localeCompare(secondRecord.date) || firstRecord.id - secondRecord.id,
+        )
+      const vehicleCalculations = vehicleRecords.slice(1).map((record, index) => {
+        const previousRecord = vehicleRecords[index]
+        const distance = record.odometer - previousRecord.odometer
+
+        return distance > 0
+          ? { distance, efficiency: distance / record.liters }
+          : null
+      }).filter(Boolean)
+      const vehicleMonthRecords = vehicleRecords.filter((record) => record.date.startsWith(currentMonth))
+
+      return {
+        vehicle,
+        totalAmount: vehicleMonthRecords.reduce((total, record) => total + record.amount, 0),
+        averageEfficiency: vehicleCalculations.length
+          ? vehicleCalculations.reduce((total, calculation) => total + calculation.efficiency, 0) / vehicleCalculations.length
+          : null,
+        totalDistance: vehicleCalculations.reduce((total, calculation) => total + calculation.distance, 0),
+      }
+    })
+    .sort((firstStats, secondStats) => (secondStats.averageEfficiency ?? -1) - (firstStats.averageEfficiency ?? -1))
+  const bestEfficiency = comparisonStats.find((stats) => stats.averageEfficiency !== null)?.averageEfficiency
   const monthlyBudget = Number(activeVehicle?.budgetBulanan) || 0
   const serviceInterval = Number(activeVehicle?.intervalServisKm) || 0
   const latestRecord = chronologicalRecords[chronologicalRecords.length - 1]
@@ -432,6 +460,16 @@ function App() {
           </section>
         </>
       )}
+
+      {vehicles.length >= 2 && <section className="comparison-section" aria-labelledby="comparison-title">
+        <div className="section-heading comparison-heading">
+          <div><p className="eyebrow">Overview garasi</p><h2 id="comparison-title">Perbandingan Kendaraan</h2></div>
+          <span>{vehicles.length} kendaraan</span>
+        </div>
+        <div className="table-wrap"><table className="comparison-table"><thead><tr><th>Kendaraan</th><th>Pengeluaran bulan ini</th><th>Rata-rata efisiensi</th><th>Total km ditempuh</th></tr></thead><tbody>
+          {comparisonStats.map((stats) => <tr key={stats.vehicle.id}><td><strong>{stats.vehicle.name}</strong>{stats.averageEfficiency === bestEfficiency && <span className="economy-badge">Paling Hemat</span>}</td><td>{formatCurrency(stats.totalAmount)}</td><td>{stats.averageEfficiency === null ? '-' : `${formatNumber(stats.averageEfficiency)} km/L`}</td><td>{formatNumber(stats.totalDistance)} km</td></tr>)}
+        </tbody></table></div>
+      </section>}
     </main>
   )
 }
