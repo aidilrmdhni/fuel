@@ -11,6 +11,230 @@
   margin-bottom: 32px;
 }
 
+.vehicles-section {
+  margin-bottom: 32px;
+  padding: 24px;
+  border-radius: 16px;
+  background: #111827;
+  color: #f9fafb;
+  box-shadow: 0 14px 32px rgb(15 23 42 / 14%);
+}
+
+.page-section-heading {
+  padding: 0;
+}
+
+.page-section-heading h2 {
+  margin-bottom: 0;
+  color: #ffffff;
+}
+
+.page-section-heading .eyebrow {
+  margin-bottom: 6px;
+  color: #93c5fd;
+}
+
+.page-section-heading > span {
+  color: #9ca3af;
+}
+
+.vehicle-manager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.vehicle-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.vehicle-card,
+.vehicle-empty {
+  min-height: 142px;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 6%);
+}
+
+.vehicle-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-top: 4px solid #38bdf8;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.vehicle-card:hover,
+.vehicle-card.is-active {
+  transform: translateY(-2px);
+  background: rgb(255 255 255 / 12%);
+}
+
+.vehicle-card.is-active {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.vehicle-color-1 { border-top-color: #fbbf24; }
+.vehicle-color-2 { border-top-color: #fb7185; }
+.vehicle-color-3 { border-top-color: #a78bfa; }
+
+.vehicle-select {
+  display: flex;
+  min-height: auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  color: #f9fafb;
+  background: transparent;
+  text-align: left;
+}
+
+.vehicle-select:hover {
+  background: transparent;
+}
+
+.vehicle-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  place-items: center;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 12%);
+}
+
+.vehicle-icon svg {
+  width: 38px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.vehicle-details {
+  display: grid;
+  gap: 4px;
+}
+
+.vehicle-details strong {
+  font-size: 0.95rem;
+}
+
+.vehicle-details small {
+  color: #9ca3af;
+}
+
+.vehicle-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.vehicle-actions button {
+  min-height: 28px;
+  padding: 0 8px;
+  color: #d1d5db;
+  background: transparent;
+  font-size: 0.75rem;
+}
+
+.vehicle-actions button:hover {
+  color: #ffffff;
+  background: rgb(255 255 255 / 10%);
+}
+
+.vehicle-form {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding-left: 24px;
+  border-left: 1px solid rgb(255 255 255 / 12%);
+}
+
+.vehicle-form h3 {
+  margin: 0 0 4px;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.vehicle-form label {
+  color: #d1d5db;
+}
+
+.vehicle-form input,
+.vehicle-form select {
+  min-height: 38px;
+  border-color: #374151;
+  color: #f9fafb;
+  background: #1f2937;
+}
+
+.vehicle-form select {
+  padding: 0 10px;
+  border-radius: 7px;
+  font: inherit;
+}
+
+.vehicle-form-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vehicle-form-actions button {
+  flex: 1;
+  min-width: 120px;
+  padding-inline: 8px;
+  font-size: 0.8rem;
+}
+
+.secondary-button {
+  color: #d1d5db;
+  background: #374151;
+}
+
+.vehicle-empty {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 5px;
+  color: #d1d5db;
+}
+
+.vehicle-empty span:last-child {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.vehicle-empty-icon {
+  color: #93c5fd;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.active-vehicle-label {
+  margin: -12px 0 18px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.app-empty-state {
+  padding: 48px 24px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  color: #64748b;
+  background: #f8fafc;
+  text-align: center;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   color: #2563eb;
@@ -262,6 +486,16 @@ tbody tr:last-child td {
     grid-column: 1 / -1;
   }
 
+  .vehicle-manager {
+    grid-template-columns: 1fr;
+  }
+
+  .vehicle-form {
+    padding: 20px 0 0;
+    border-top: 1px solid rgb(255 255 255 / 12%);
+    border-left: 0;
+  }
+
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -276,6 +510,10 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 480px) {
+  .vehicles-section {
+    padding: 18px;
+  }
+
   .panel {
     padding: 18px;
   }

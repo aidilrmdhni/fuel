@@ -37,5 +37,11 @@ export function useFuelRecords() {
     )
   }
 
-  return { records, addRecord, removeRecord }
+  function removeRecordsForVehicle(vehicleId) {
+    setRecords((currentRecords) =>
+      currentRecords.filter((record) => record.vehicleId !== vehicleId),
+    )
+  }
+
+  return { records, addRecord, removeRecord, removeRecordsForVehicle }
 }
