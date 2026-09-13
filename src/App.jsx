@@ -68,6 +68,20 @@ function getBackupFileName() {
   return `fuel-tracker-backup-${getToday()}.json`
 }
 
+function getCsvFileName(vehicleName) {
+  const safeName = vehicleName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
+
+  return `riwayat-bensin-${safeName || 'kendaraan'}-${getToday()}.csv`
+}
+
+function escapeCsvValue(value) {
+  const stringValue = String(value ?? '')
+
+  return /[",\n]/.test(stringValue)
+    ? `"${stringValue.replaceAll('"', '""')}"`
+    : stringValue
+}
+
 function isValidBackup(data) {
   const validTypes = new Set(['motorcycle', 'car', 'other'])
   const validVehicles = Array.isArray(data?.vehicles) && data.vehicles.every(
@@ -294,6 +308,35 @@ function App() {
     setDataMessage({ type: 'success', text: `Data berhasil diekspor sebagai ${link.download}.` })
   }
 
+  function handleExportCsv() {
+    if (!activeVehicle) return
+
+    const headers = ['Tanggal', 'Nominal', 'Liter', 'Odometer', 'Jarak', 'Efisiensi km/L', 'Biaya per km']
+    const rows = chronologicalRecords.map((record) => {
+      const calculation = calculations.get(record.id)
+
+      return [
+        record.date,
+        record.amount,
+        record.liters,
+        record.odometer,
+        calculation?.distance ?? '-',
+        calculation?.efficiency ?? '-',
+        calculation?.costPerKm ?? '-',
+      ]
+    })
+    const csv = [headers, ...rows].map((row) => row.map(escapeCsvValue).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const downloadUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = downloadUrl
+    link.download = getCsvFileName(activeVehicle.name)
+    link.click()
+    URL.revokeObjectURL(downloadUrl)
+    setDataMessage({ type: 'success', text: `Riwayat berhasil diekspor sebagai ${link.download}.` })
+  }
+
   function dismissBackupReminder() {
     const tomorrow = Date.now() + 24 * 60 * 60 * 1000
 
@@ -408,6 +451,7 @@ function App() {
         </div>
         <div className="data-actions">
           <button type="button" onClick={handleExport}>Export Data</button>
+          <button type="button" onClick={handleExportCsv} disabled={!activeVehicle}>Export ke CSV</button>
           <label className="import-button">
             Import Data
             <input type="file" accept="application/json,.json" onChange={handleImport} />
